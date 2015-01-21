@@ -25,8 +25,8 @@ if mfa_user is None:
     sys.exit('Could not find MFA_USER or your username!')
 
 # Prompt for MFA time-based one-time password (TOTP)
-#mfa_TOTP = raw_input("Enter your AWS MFA code: ")
-mfa_TOTP = os.environ.net('MFA_CODE')
+# mfa_TOTP = raw_input("Enter your AWS MFA code: ")
+mfa_TOTP = os.environ.get('MFA_CODE')
 if mfa_TOTP is None:
     sys.exit('Could not find MFA_CODE!')
 
