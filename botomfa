@@ -1,0 +1,13 @@
+#!/usr/bin/python2.7
+# This launches the app
+
+import argparse
+import botomfa
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--duration',
+                    help='Duration in seconds the temporary'
+                    ' credentials should be valid', default=900)
+
+args = parser.parse_args()
+botomfa.run(args.duration)

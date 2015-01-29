@@ -1,45 +1,62 @@
+
 # botomfa
 
+**botomfa** obtains temporary ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``AWS_SECURITY_TOKEN``  values from [AWS Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) and populates these values in the user's boto config.
 
-``import botomfa`` into any of your scripts that utilize the boto SDK.
+After installing, run ``botomfa [--duration n]`` to verify/update your temporary AWS credentials. 
 
-**botomfa** overrides ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``AWS_SECURITY_TOKEN`` with temporary values obtained from [AWS Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) for the duration of the script execution.
+``duration`` specifies, in seconds, the length of time in which your temporary credentials remain valid. The default value is 900 seconds, a dictated minimum by AWS.
+
+#### Install:
+
+`python setup.py install`
 
 
 #### Requirements:
 
 1. You must provide your AWS account number via the environment variable ``AWS_ACT_NUM``
-2. The script assumes the identifying value of your MFA device is the same as your shell's ``USER`` variable. To override this, provide the environment variable ``MFA_USER`` with your MFA id.
-3. The MFA token is provided via an the environment variable ``MFA_CODE``
-
+2. The script assumes the identifying value of your MFA device is the same as your shell's ``USER`` variable. To override this, set the environment variable ``MFA_USER`` with your MFA device id.
 
 **e.g.** ``arn:aws:iam::AWS_ACT_NUM:mfa/MFA_USER``
 
 
-### Example
+This script requires that you have a boto user config with the following sections:
+
+```
+[long-term]
+aws_access_key_id = YOUR_LONGTERM_KEY_ID
+aws_secret_access_key = YOUR_LONGTERM_ACCESS_KEY
+
+[Credentials]
+aws_access_key_id = <POPULATED_BY_SCRIPT>
+aws_secret_access_key = <POPULATED_BY_SCRIPT>
+aws_security_token = <POPULATED_BY_SCRIPT>
+
+```
+
+The section ``[long-term]`` houses your long-term credentials
+that do not change. These are referecned when creating temporary credentials.
+This script manages, validates, and updates temporary credentials which are then stored in the [Credentials] section. This section may look familar to you as the **defaut/fallback** section that boto references when authenticating to AWS services. This is intentional so that you are not requred to update any of your existing boto scripts!
 
 
 It's probably a good idea to put ``AWS_ACT_NUM`` in your shell startup/source scripts.
 
-
-##### Example #1
-**list_instances.py**
-
-```
-> MFA_CODE=123456 python list_intances.py
-[Instance:i-0z0z0z0z, Instance:i-2f2f2f2f]
-```
+### Example
 
 
-##### Example #2
+Before running all of your scripts that use boto, do the following:
+
+
 ```
->>> import os
->>> os.environ['AWS_ACT_NUM'] = '000000000000'
->>> os.environ['MFA_USER'] = 'karl'
->>> os.environ['MFA_CODE'] = 123456
->>> import boto.ec2
->>> import botomfa
->>> conn = boto.ec2.connect_to_region('us-west-2')
->>> conn.get_only_instances()
-[Instance:i-0z0z0z0z, Instance:i-2f2f2f2f]
+person@host> botomfa
+Validating current temporary credentials..
+Current temporary creds failed.
+Enter AWS MFA code for user person:123456
+Validating current temporary credentials..
+Current temporary credentials success!
+person@host> ./botomfa
+Validating Current Temporary Credentials
+Current temporary credentials success!
 ```
+
+If you need more than 900s to work on your stuff, use: ``botomfa --duration 3600``
