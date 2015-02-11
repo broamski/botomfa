@@ -1,15 +1,17 @@
 
-# botomfa
+# botomfa: boto + multi-factor authentication (MFA) enabled accounts
 
-**botomfa** obtains temporary ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``AWS_SECURITY_TOKEN``  values from [AWS Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) and populates these values in the user's boto config.
 
-After installing, run ``botomfa [--duration n]`` to verify/update your temporary AWS credentials. 
+**botomfa** makes it easy to use boto, the AWS SDK for Python, with AWS IAM user accounts that have multi-factor authentication (MFA) enabled.
 
-``duration`` specifies, in seconds, the length of time in which your temporary credentials remain valid. The default value is 900 seconds, a dictated minimum by AWS.
+**botomfa** utilizes your long-term IAM User Access Keys to obtain temporary ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``AWS_SECURITY_TOKEN``  values from [AWS Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) and populates these values in the user's boto config.
 
-#### Install:
 
-`python setup.py install`
+#### Installation:
+
+1. Clone this repo
+2. `python setup.py install`
+ 
 
 
 #### Requirements:
@@ -22,7 +24,7 @@ boto profiles were introduced in v2.24.0. This has been tested on versions >=2.3
 **e.g.** ``arn:aws:iam::AWS_ACT_NUM:mfa/MFA_USER``
 
 
-This script requires that you have a boto user config with the following sections:
+**botomfa** requires that you have a boto user configuration file with the following sections:
 
 ```
 [long-term]
@@ -36,18 +38,23 @@ aws_security_token = <POPULATED_BY_SCRIPT>
 
 ```
 
-The section ``[long-term]`` houses your long-term credentials
+The section ``[long-term]`` houses your long-term IAM User Access Keys
 that do not change. These are referecned when creating temporary credentials.
-This script manages, validates, and updates temporary credentials which are then stored in the [Credentials] section. This section may look familar to you as the **defaut/fallback** section that boto references when authenticating to AWS services. This is intentional so that you are not requred to update any of your existing boto scripts!
+This script manages, validates, and updates temporary credentials which are stored in the ``[Credentials]`` section. This section may look familar to you as the **defaut/fallback** section that boto references when authenticating to AWS services. This is intentional so that you are not requred to update any of your existing boto scripts!
 
 
 It's probably a good idea to put ``AWS_ACT_NUM`` in your shell startup/source scripts.
 
-### Example
+### Usage Example
 
 
-Before running all of your scripts that use boto, do the following:
+After installing and before utilizing boto, run ``botomfa [--duration n]`` to verify/update your temporary AWS credentials. 
 
+``duration`` specifies, in seconds, the length of time in which your temporary credentials remain valid. The default value is 900 seconds, a dictated minimum by AWS.
+
+**botomfa** is ran *before* running any of your scripts that use the boto library.
+
+Below you will see that the temporary credentails in the ``[Credentials]`` section have expired and are no longer valid. So, you are prompted for your current MFA code in order to update these values:
 
 ```
 person@host> botomfa
@@ -56,9 +63,14 @@ Current temporary creds failed.
 Enter AWS MFA code for user person:123456
 Validating current temporary credentials..
 Current temporary credentials success!
+```
+
+Running **botomfa** again shows that your credentials are valid. You are now free to use boto uninterupted for the duration of your temporary credentials.
+
+```
 person@host> botomfa
 Validating Current Temporary Credentials
 Current temporary credentials success!
 ```
 
-If you need more than 900s to work on your stuff, use: ``botomfa --duration 3600``
+If you require temporary credentials longer than 900 seconds, try a larger duration value: ``botomfa --duration 3600``
