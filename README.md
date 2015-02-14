@@ -6,6 +6,8 @@
 
 **botomfa** utilizes your long-term IAM User Access Keys to obtain temporary ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and ``AWS_SECURITY_TOKEN``  values from [AWS Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) and populates these values in the user's boto config.
 
+*Note*: The credentials test is performed by making a basic connection to s3 a la ``get_all_buckets()``.
+
 
 #### Installation:
 
