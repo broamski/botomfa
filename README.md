@@ -47,6 +47,10 @@ This script manages, validates, and updates temporary credentials which are stor
 
 It's probably a good idea to put ``AWS_ACT_NUM`` in your shell startup/source scripts.
 
+**Optional envrionment variables:**
+
+  * STS_DURATION - Overrides STS token `--duration` 
+
 ### Usage Example
 
 
