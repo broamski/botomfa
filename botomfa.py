@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 
@@ -53,6 +54,10 @@ def get_sts(duration):
             'Credentials',
             'aws_security_token',
             tempCredentials.session_token)
+        boto.config.save_user_option(
+            'Credentials',
+            'expiration',
+            tempCredentials.expiration)
     except boto.exception.BotoServerError as e:
         message = '%s - Please try again.' % (e.message)
         sys.exit(message)
@@ -67,13 +72,22 @@ def test_creds():
         'Credentials', 'aws_security_token')
 
     try:
-        sys.stdout.write('Validating current temporary cedentials..\n')
+        sys.stdout.write('Validating temporary credentials..\n')
         s3 = boto.connect_s3()
         s3.get_all_buckets()
-        sys.stdout.write('Current temporary credentials success!\n')
+        expiration_string = boto.config.get('Credentials', 'expiration')
+        exp_dt = datetime.datetime.strptime(
+            expiration_string, '%Y-%m-%dT%H:%M:%SZ'
+        )
+        t_diff = exp_dt - datetime.datetime.utcnow()
+        sys.stdout.write(
+            'Temporary credentials validation successful! '
+            'Token expires in %s seconds at %s\n' %
+            (t_diff.seconds, expiration_string)
+        )
         return True
     except:
-        sys.stdout.write('Current temporary creds failed.\n')
+        sys.stdout.write('Temporary credentials failed.\n')
         return False
 
 
