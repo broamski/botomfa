@@ -3,11 +3,20 @@
 
 import argparse
 import botomfa
+import os
+
+DEFAULT_DURATION = 900
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--duration',
                     help='Duration in seconds for the temporary'
-                    ' credentials to remain valid.', default=900)
-
+                    ' credentials to remain valid.', default=DEFAULT_DURATION)
 args = parser.parse_args()
-botomfa.run(args.duration)
+
+env_duration = os.environ.get('STS_DURATION')
+if env_duration:
+    duration = env_duration
+else:
+    duration = args.duration
+
+botomfa.run(duration)
