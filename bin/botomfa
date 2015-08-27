@@ -11,6 +11,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--duration',
                     help='Duration in seconds for the temporary'
                     ' credentials to remain valid.', default=DEFAULT_DURATION)
+parser.add_argument('--aws-act-num',
+                    help='AWS account number')
+parser.add_argument('--mfa-device-name',
+                    help='Typically the AWS username')
 args = parser.parse_args()
 
 env_duration = os.environ.get('STS_DURATION')
@@ -19,4 +23,16 @@ if env_duration:
 else:
     duration = args.duration
 
-botomfa.run(duration)
+env_aws_account_num = os.environ.get('AWS_ACT_NUM')
+if env_aws_account_num:
+    aws_account_num = env_aws_account_num
+else:
+    aws_account_num = args.aws_act_num
+
+env_mfa_device_name = os.environ.get('MFA_DEVICE_NAME')
+if env_mfa_device_name:
+    mfa_device_name = env_mfa_device_name
+else:
+    mfa_device_name = args.mfa_device_name
+
+botomfa.run(duration, aws_account_num, mfa_device_name)

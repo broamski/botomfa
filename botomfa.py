@@ -17,24 +17,8 @@ stdout_handler.setLevel(logging.DEBUG)
 logger.addHandler(stdout_handler)
 logger.setLevel(logging.DEBUG)
 
-# Get AWS account number. Needed to build MFA serial
-aws_account_num = os.environ.get('AWS_ACT_NUM')
-if aws_account_num is None:
-    logger.error('Environment variable AWS_ACT_NUM is required.')
-    sys.exit(1)
 
-# If your MFA device is named something other than your
-# shell's username, it can be provided via MFA_USER
-mfa_device_name = os.environ.get('MFA_DEVICE_NAME') or os.environ.get('USER')
-if mfa_device_name is None:
-    logger.error('Could retrieve MFA device name from environment '
-                 'variables MFA_DEVICE_NAME or USER.')
-    sys.exit(1)
-
-mfa_serial = 'arn:aws:iam::%s:mfa/%s' % (aws_account_num, mfa_device_name)
-
-
-def get_sts(duration):
+def get_sts(duration, mfa_serial, mfa_device_name):
     if boto.config.get('long-term', 'aws_access_key_id') is None:
         logger.error('aws_access_key_id is missing from section long-term '
                      'or config file is missing.')
@@ -130,7 +114,28 @@ def test_creds():
         return False
 
 
-def run(duration):
+def run(duration, aws_account_num, mfa_device_name):
+    # Get AWS account number. Needed to build MFA serial
+    if aws_account_num is None:
+        logger.error('AWS Account number must be set either via '
+                     'AWS_ACT_NUM environment variable '
+                     'or --aws-acct-num.')
+        sys.exit(1)
+
+    # If your MFA device is named something other than your
+    # shell's username, it can be provided via MFA_USER
+    mfa_device_name = (mfa_device_name or
+                       os.environ.get('USER'))
+    if mfa_device_name is None:
+        logger.error('Could retrieve MFA device name from environment '
+                     'variables MFA_DEVICE_NAME or USER.')
+        sys.exit(1)
+
+    mfa_serial = 'arn:aws:iam::%s:mfa/%s' % (aws_account_num, mfa_device_name)
+
+    logger.debug('Your AWS account number is: %s' % aws_account_num)
+    logger.debug('Your MFA device name is: %s' % mfa_device_name)
+
     # if any of the section named fields are missing, prompt for token
     if (
         boto.config.get_value('Credentials', 'aws_access_key_id') is None or
@@ -139,8 +144,8 @@ def run(duration):
     ):
         logger.info(
             'Temporary credentials are missing, obtaining them.')
-        get_sts(duration)
+        get_sts(duration, mfa_serial, mfa_device_name)
 
     if not test_creds():
-        get_sts(duration)
+        get_sts(duration, mfa_serial, mfa_device_name)
         test_creds()
