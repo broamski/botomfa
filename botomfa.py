@@ -24,12 +24,21 @@ mfa_serial = 'arn:aws:iam::%s:mfa/%s' % (aws_account_num, mfa_device_name)
 
 
 def get_sts(duration):
-    os.environ['AWS_ACCESS_KEY_ID'] = boto.config.get(
-        'long-term',
-        'aws_access_key_id')
-    os.environ['AWS_SECRET_ACCESS_KEY'] = boto.config.get(
-        'long-term',
-        'aws_secret_access_key')
+    if boto.config.get('long-term', 'aws_access_key_id') is None:
+        sys.exit('aws_access_key_id is missing from section long-term '
+                 'or config file is missing.')
+    else:
+        long_term_id = boto.config.get('long-term', 'aws_access_key_id')
+
+    if boto.config.get('long-term', 'aws_secret_access_key') is None:
+        sys.exit('aws_secret_access_key is missing from section long-term '
+                 'or config file is missing.')
+    else:
+        long_term_secret = boto.config.get('long-term', 'aws_access_key_id')
+
+    os.environ['AWS_ACCESS_KEY_ID'] = long_term_id
+    os.environ['AWS_SECRET_ACCESS_KEY'] = long_term_secret
+
     boto.config.remove_option('Credentials', 'aws_security_token')
     try:
         del os.environ['AWS_SECURITY_TOKEN']
@@ -99,7 +108,7 @@ def run(duration):
         boto.config.get('Credentials', 'aws_security_token') is None
     ):
         sys.stdout.write(
-            'Temporary credentials are missing grabbing them again\n')
+            'Temporary credentials are missing, obtaining them.\n')
         get_sts(duration)
 
     if not test_creds():
