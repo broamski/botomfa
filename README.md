@@ -21,12 +21,12 @@
 boto profiles were introduced in v2.24.0. This has been tested on versions >=2.35.2.
 
 1. You must provide your AWS account number via the environment variable ``AWS_ACT_NUM``
-2. The script assumes the identifying value of your MFA device is the same as your shell's ``USER`` variable. To override this, set the environment variable ``MFA_USER`` with your MFA device id.
+2. The script assumes the identifying value of your MFA device is the same as your shell's ``USER`` variable. To override this, set the environment variable ``MFA_DEVICE_NAME`` with your MFA device id.
 
-**e.g.** ``arn:aws:iam::AWS_ACT_NUM:mfa/MFA_USER``
+**e.g.** ``arn:aws:iam::AWS_ACT_NUM:mfa/MFA_DEVICE_NAME``
 
 
-**botomfa** requires that you have a boto user configuration file with the following sections:
+**botomfa** requires that you have a [boto user configuration file](http://boto.readthedocs.org/en/latest/boto_config_tut.html) with the following sections:
 
 ```
 [long-term]
