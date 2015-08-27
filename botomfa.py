@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import sys
 
@@ -8,33 +9,45 @@ import boto.exception
 
 from boto.sts import STSConnection
 
+logger = logging.getLogger('botomfa')
+stdout_handler = logging.StreamHandler(stream=sys.stdout)
+stdout_handler.setFormatter(
+    logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+stdout_handler.setLevel(logging.DEBUG)
+logger.addHandler(stdout_handler)
+logger.setLevel(logging.DEBUG)
+
 # Get AWS account number. Needed to build MFA serial
 aws_account_num = os.environ.get('AWS_ACT_NUM')
 if aws_account_num is None:
-    sys.exit('Environment variable AWS_ACT_NUM is required.')
+    logger.error('Environment variable AWS_ACT_NUM is required.')
+    sys.exit(1)
 
 # If your MFA device is named something other than your
 # shell's username, it can be provided via MFA_USER
 mfa_device_name = os.environ.get('MFA_DEVICE_NAME') or os.environ.get('USER')
 if mfa_device_name is None:
-    sys.exit('Could retrieve MFA device name from environment '
-             'variables MFA_DEVICE_NAME or USER.')
+    logger.error('Could retrieve MFA device name from environment '
+                 'variables MFA_DEVICE_NAME or USER.')
+    sys.exit(1)
 
 mfa_serial = 'arn:aws:iam::%s:mfa/%s' % (aws_account_num, mfa_device_name)
 
 
 def get_sts(duration):
     if boto.config.get('long-term', 'aws_access_key_id') is None:
-        sys.exit('aws_access_key_id is missing from section long-term '
-                 'or config file is missing.')
+        logger.error('aws_access_key_id is missing from section long-term '
+                     'or config file is missing.')
+        sys.exit(1)
     else:
         long_term_id = boto.config.get('long-term', 'aws_access_key_id')
 
     if boto.config.get('long-term', 'aws_secret_access_key') is None:
-        sys.exit('aws_secret_access_key is missing from section long-term '
-                 'or config file is missing.')
+        logger.error('aws_secret_access_key is missing from section long-term '
+                     'or config file is missing.')
+        sys.exit(1)
     else:
-        long_term_secret = boto.config.get('long-term', 'aws_access_key_id')
+        long_term_secret = boto.config.get('long-term', 'aws_secret_access_key')
 
     os.environ['AWS_ACCESS_KEY_ID'] = long_term_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = long_term_secret
@@ -69,7 +82,8 @@ def get_sts(duration):
             tempCredentials.expiration)
     except boto.exception.BotoServerError as e:
         message = '%s - Please try again.' % (e.message)
-        sys.exit(message)
+        logger.error(message)
+        sys.exit(1)
 
 
 def test_creds():
@@ -81,7 +95,7 @@ def test_creds():
         'Credentials', 'aws_security_token')
 
     try:
-        sys.stdout.write('Validating temporary credentials..\n')
+        logger.info('Validating temporary credentials..')
         s3 = boto.connect_s3()
         s3.get_all_buckets()
         expiration_string = boto.config.get('Credentials', 'expiration')
@@ -89,14 +103,14 @@ def test_creds():
             expiration_string, '%Y-%m-%dT%H:%M:%SZ'
         )
         t_diff = exp_dt - datetime.datetime.utcnow()
-        sys.stdout.write(
+        logger.info(
             'Temporary credentials validation successful! '
-            'Token expires in %s seconds at %s\n' %
+            'Token expires in %s seconds at %s' %
             (t_diff.seconds, expiration_string)
         )
         return True
     except:
-        sys.stdout.write('Temporary credentials failed.\n')
+        logger.error('Temporary credentials failed.')
         return False
 
 
@@ -107,8 +121,8 @@ def run(duration):
         boto.config.get('Credentials', 'aws_secret_access_key') is None or
         boto.config.get('Credentials', 'aws_security_token') is None
     ):
-        sys.stdout.write(
-            'Temporary credentials are missing, obtaining them.\n')
+        logger.info(
+            'Temporary credentials are missing, obtaining them.')
         get_sts(duration)
 
     if not test_creds():
