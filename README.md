@@ -27,7 +27,7 @@ The concept behind **botomfa** is that there are 2 types of credentials:
 boto profiles were introduced in v2.24.0. This has been tested on versions >=2.35.2.
 
 
-**botomfa** requires that you have a [boto user configuration file](http://boto.readthedocs.org/en/latest/boto_config_tut.html) with the following sections:
+**botomfa** requires that you have a .boto [boto user configuration file](http://boto.readthedocs.org/en/latest/boto_config_tut.html) in your home directory with the following sections:
 
 ```
 [long-term]
