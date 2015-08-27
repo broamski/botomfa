@@ -26,7 +26,7 @@ boto profiles were introduced in v2.24.0. This has been tested on versions >=2.3
 **e.g.** ``arn:aws:iam::AWS_ACT_NUM:mfa/MFA_USER``
 
 
-**botomfa** requires that you have a boto user configuration file with the following sections:
+**botomfa** requires that you have a [boto user configuration file](http://boto.readthedocs.org/en/latest/boto_config_tut.html) with the following sections:
 
 ```
 [long-term]
