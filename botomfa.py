@@ -57,7 +57,9 @@ def get_sts(duration):
         del os.environ['AWS_SECURITY_TOKEN']
     except:
         pass
-    mfa_TOTP = raw_input("Enter AWS MFA code for user %s:" % mfa_device_name)
+    mfa_TOTP = raw_input('Enter AWS MFA code for user %s '
+                         '(renewing for %s seconds):' %
+                         (mfa_device_name, duration))
     try:
         sts_connection = STSConnection()
         tempCredentials = sts_connection.get_session_token(
