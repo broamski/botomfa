@@ -96,13 +96,27 @@ def test_creds():
 
     try:
         logger.info('Validating temporary credentials..')
-        s3 = boto.connect_s3()
-        s3.get_all_buckets()
         expiration_string = boto.config.get('Credentials', 'expiration')
+        if expiration_string is None:
+            logger.error('Expiration timestamp missing from temporary '
+                         'credentials.')
+            return False
         exp_dt = datetime.datetime.strptime(
             expiration_string, '%Y-%m-%dT%H:%M:%SZ'
         )
         t_diff = exp_dt - datetime.datetime.utcnow()
+        if t_diff.total_seconds() <= 0:
+            logger.warn('Your temporary credentials have expired. '
+                        'Attempting to renew...')
+            return False
+
+        # Validate against a real service. This may not be the best solution
+        # for everyone, as the person attempting to fetch an STS token may
+        # now have access to S3. This might need to be more flexible or we
+        # could potentially ditch this altogether?
+        s3 = boto.connect_s3()
+        s3.get_all_buckets()
+
         logger.info(
             'Temporary credentials validation successful! '
             'Token expires in %s seconds at %s' %
