@@ -36,7 +36,8 @@ def get_sts(duration, mfa_serial, mfa_device_name):
     os.environ['AWS_ACCESS_KEY_ID'] = long_term_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = long_term_secret
 
-    boto.config.remove_option('Credentials', 'aws_security_token')
+    if boto.config.has_section('Credentials'):
+        boto.config.remove_option('Credentials', 'aws_security_token')
     try:
         del os.environ['AWS_SECURITY_TOKEN']
     except:
