@@ -9,5 +9,5 @@ setup(
     author='Brian Nuszkowski',
     py_modules=['botomfa'],
     install_requires=['boto>=2.35.2'],
-    data_files=[('/usr/bin', ['botomfa'])]
+    scripts=["bin/botomfa"]
 )
