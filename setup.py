@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='botomfa',
-    version='0.2.3',
+    version='0.2.4',
     author='Brian Nuszkowski',
     py_modules=['botomfa'],
     install_requires=['boto>=2.35.2'],

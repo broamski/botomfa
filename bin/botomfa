@@ -15,6 +15,8 @@ parser.add_argument('--aws-act-num',
                     help='AWS account number')
 parser.add_argument('--mfa-device-name',
                     help='Typically the AWS username')
+parser.add_argument('--profile',
+                    help='Use botomfa with a profile', default=None)
 args = parser.parse_args()
 
 env_duration = os.environ.get('STS_DURATION')
@@ -35,4 +37,4 @@ if env_mfa_device_name:
 else:
     mfa_device_name = args.mfa_device_name
 
-botomfa.run(duration, aws_account_num, mfa_device_name)
+botomfa.run(duration, aws_account_num, mfa_device_name, args.profile)

@@ -18,53 +18,48 @@ logger.addHandler(stdout_handler)
 logger.setLevel(logging.DEBUG)
 
 
-def get_sts(duration, mfa_serial, mfa_device_name):
-    if boto.config.get('long-term', 'aws_access_key_id') is None:
-        logger.error('aws_access_key_id is missing from section long-term '
-                     'or config file is missing.')
+def get_sts(duration, mfa_serial, mfa_device_name, long_term, short_term):
+    if boto.config.get(long_term, 'aws_access_key_id') is None:
+        logger.error('aws_access_key_id is missing from section %s'
+                     'or config file is missing.' % (long_term,))
         sys.exit(1)
     else:
-        long_term_id = boto.config.get('long-term', 'aws_access_key_id')
+        long_term_id = boto.config.get(long_term, 'aws_access_key_id')
 
-    if boto.config.get('long-term', 'aws_secret_access_key') is None:
-        logger.error('aws_secret_access_key is missing from section long-term '
-                     'or config file is missing.')
+    if boto.config.get(long_term, 'aws_secret_access_key') is None:
+        logger.error('aws_secret_access_key is missing from section '
+                     'or config file is missing.' % (long_term,))
         sys.exit(1)
     else:
-        long_term_secret = boto.config.get('long-term', 'aws_secret_access_key')
+        long_term_secret = boto.config.get(long_term, 'aws_secret_access_key')
 
-    os.environ['AWS_ACCESS_KEY_ID'] = long_term_id
-    os.environ['AWS_SECRET_ACCESS_KEY'] = long_term_secret
+    if boto.config.has_section(short_term):
+        boto.config.remove_option(short_term, 'aws_security_token')
 
-    if boto.config.has_section('Credentials'):
-        boto.config.remove_option('Credentials', 'aws_security_token')
-    try:
-        del os.environ['AWS_SECURITY_TOKEN']
-    except:
-        pass
     mfa_TOTP = raw_input('Enter AWS MFA code for user %s '
                          '(renewing for %s seconds):' %
                          (mfa_device_name, duration))
     try:
-        sts_connection = STSConnection()
+        sts_connection = STSConnection(aws_access_key_id=long_term_id,
+                                       aws_secret_access_key=long_term_secret)
         tempCredentials = sts_connection.get_session_token(
             duration=duration,
             mfa_serial_number=mfa_serial,
             mfa_token=mfa_TOTP)
         boto.config.save_user_option(
-            'Credentials',
+            short_term,
             'aws_access_key_id',
             tempCredentials.access_key)
         boto.config.save_user_option(
-            'Credentials',
+            short_term,
             'aws_secret_access_key',
             tempCredentials.secret_key)
         boto.config.save_user_option(
-            'Credentials',
+            short_term,
             'aws_security_token',
             tempCredentials.session_token)
         boto.config.save_user_option(
-            'Credentials',
+            short_term,
             'expiration',
             tempCredentials.expiration)
     except boto.exception.BotoServerError as e:
@@ -73,17 +68,10 @@ def get_sts(duration, mfa_serial, mfa_device_name):
         sys.exit(1)
 
 
-def test_creds():
-    os.environ['AWS_ACCESS_KEY_ID'] = boto.config.get(
-        'Credentials', 'aws_access_key_id')
-    os.environ['AWS_SECRET_ACCESS_KEY'] = boto.config.get(
-        'Credentials', 'aws_secret_access_key')
-    os.environ['AWS_SECURITY_TOKEN'] = boto.config.get(
-        'Credentials', 'aws_security_token')
-
+def test_creds(profile_name):
     try:
         logger.info('Validating temporary credentials..')
-        expiration_string = boto.config.get('Credentials', 'expiration')
+        expiration_string = boto.config.get(profile_name, 'expiration')
         if expiration_string is None:
             logger.error('Expiration timestamp missing from temporary '
                          'credentials.')
@@ -115,7 +103,17 @@ def test_creds():
         return False
 
 
-def run(duration, aws_account_num, mfa_device_name):
+def run(duration, aws_account_num, mfa_device_name, profile):
+    # If no profile specified, use default
+    if profile is None:
+        logger.debug('Using default profile.')
+        long_term_profile = 'long-term'
+        short_term_profile = 'Credentials'
+    else:
+        logger.debug('Using profile: %s' % profile)
+        long_term_profile = '%s-%s' % (profile, 'long-term')
+        short_term_profile = profile
+
     # Get AWS account number. Needed to build MFA serial
     if aws_account_num is None:
         logger.error('AWS Account number must be set either via '
@@ -139,14 +137,16 @@ def run(duration, aws_account_num, mfa_device_name):
 
     # if any of the section named fields are missing, prompt for token
     if (
-        boto.config.get_value('Credentials', 'aws_access_key_id') is None or
-        boto.config.get('Credentials', 'aws_secret_access_key') is None or
-        boto.config.get('Credentials', 'aws_security_token') is None
+        boto.config.get(short_term_profile, 'aws_access_key_id') is None or
+        boto.config.get(short_term_profile, 'aws_secret_access_key') is None or
+        boto.config.get(short_term_profile, 'aws_security_token') is None
     ):
         logger.info(
             'Temporary credentials are missing, obtaining them.')
-        get_sts(duration, mfa_serial, mfa_device_name)
+        get_sts(duration, mfa_serial,
+                mfa_device_name, long_term_profile, short_term_profile)
 
-    if not test_creds():
-        get_sts(duration, mfa_serial, mfa_device_name)
-        test_creds()
+    if not test_creds(short_term_profile):
+        get_sts(duration, mfa_serial,
+                mfa_device_name, long_term_profile, short_term_profile)
+        test_creds(short_term_profile)

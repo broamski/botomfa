@@ -60,6 +60,9 @@ aws_security_token = <POPULATED_BY_SCRIPT>
 * Environment varialbe `STS_DURATION` or command argument `--duration` - The default is 900 seconds, a dictated minimum by AWS.
 
 
+###### Profiles
+In the event that you utilize multiple AWS keypairs via profiles, we've got you covered. Just specify `--profile <profile_name>` when running `botomfa`.
+
 ### Usage Example
 
 Run **botomfa** *before* running any of your scripts that use the boto library and need valid AWS credentials. 
