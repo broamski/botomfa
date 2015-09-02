@@ -55,6 +55,8 @@ aws_security_token = <POPULATED_BY_SCRIPT>
 
 ##### Aruguments / Inputs
 
+Argument precedence: Command line arguments take precedence over environment variables. 
+
 * **Required:** Environment variable `AWS_ACT_NUM` or command argument `--aws-act-num` - Your AWS account number. 
 * Enviroment variable `MFA_DEVICE_NAME` or command argument `--mfa-device-name` -  The script assumes the identifying value of your MFA device is the same as your shell's ``USER`` variable. This option overrides that value.
 * Environment varialbe `STS_DURATION` or command argument `--duration` - The default is 900 seconds, a dictated minimum by AWS.
