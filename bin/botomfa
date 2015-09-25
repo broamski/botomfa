@@ -19,7 +19,14 @@ parser.add_argument('--profile',
                     help='Use botomfa with a profile', default=None)
 parser.add_argument('--assume-role-arn',
                     help='The ARN of the role you are assuming')
+parser.add_argument('--clear',
+                    help='Clears temporary credentials',
+                    action='store_true')
 args = parser.parse_args()
+
+if args.clear:
+    botomfa.reset_credentials(profile=args.profile)
+    quit()
 
 if args.duration:
     duration = args.duration

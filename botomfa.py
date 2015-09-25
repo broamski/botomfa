@@ -172,3 +172,15 @@ def run(duration, aws_account_num, mfa_device_name, profile,
                 mfa_device_name, long_term_profile,
                 short_term_profile, assume_role_arn)
         test_creds(short_term_profile)
+
+
+def reset_credentials(profile=None):
+    short_term_profile = 'Credentials'
+    if profile is not None:
+        short_term_profile = profile
+
+    if boto.config.has_section(short_term_profile):
+        options = ['aws_access_key_id', 'aws_secret_access_key',
+                   'aws_security_token', 'expiration', 'assumed_role']
+        for option in options:
+            boto.config.save_user_option(short_term_profile, option, '')
