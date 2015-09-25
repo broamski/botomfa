@@ -53,17 +53,15 @@ aws_secret_access_key = <POPULATED_BY_SCRIPT>
 aws_security_token = <POPULATED_BY_SCRIPT>
 ```
 
-##### Aruguments / Inputs
+##### Aruguments
 
 Argument precedence: Command line arguments take precedence over environment variables. 
 
-* **Required:** Environment variable `AWS_ACT_NUM` or command argument `--aws-act-num` - Your AWS account number. 
-* Enviroment variable `MFA_DEVICE_NAME` or command argument `--mfa-device-name` -  The script assumes the identifying value of your MFA device is the same as your shell's ``USER`` variable. This option overrides that value.
-* Environment varialbe `STS_DURATION` or command argument `--duration` - The default is 900 seconds, a dictated minimum by AWS.
-
-
-###### Profiles
-In the event that you utilize multiple AWS keypairs via profiles, we've got you covered. Just specify `--profile <profile_name>` when running `botomfa`.
+* Environment variable `AWS_ACT_NUM` or `--aws-act-num <acct_num>` - Your AWS account number. **(Required)**
+* Environment variable `MFA_DEVICE_NAME` or `--mfa-device-name <device_name>` -  botomfa assumes the identifying value of your MFA device is the same as your shell's ``USER`` variable. This option overrides that value. **(Required if your USER env variable is different from your MFA device name)**
+* Environment variable `STS_DURATION` or `--duration <duration_in_seconds>` - The default is 900 seconds, a dictated minimum by AWS. **(Optional)**
+* `--profile <profile_name>` - In the event that you utilize multiple AWS keypairs via profiles, we've got you covered. **(Optional)**
+* ` --assume-role-arn <ARN of role>` - Use this if you need to assume the role of another AWS account that requires MFA.
 
 ### Usage Example
 
