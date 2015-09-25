@@ -48,7 +48,7 @@ def get_sts(duration, mfa_serial, mfa_device_name,
                 duration=duration,
                 mfa_serial_number=mfa_serial,
                 mfa_token=mfa_TOTP)
-            boto.config.setbool(short_term, 'assumed_role', False)
+            assumed_role = 'False'
         else:
             role_session_name = assume_role_arn.split('/')[-1]
             assumedRole = sts_connection.assume_role(
@@ -57,29 +57,22 @@ def get_sts(duration, mfa_serial, mfa_device_name,
                 mfa_serial_number=mfa_serial,
                 mfa_token=mfa_TOTP)
             tempCredentials = assumedRole.credentials
-            boto.config.setbool(short_term, 'assumed_role', True)
+            assumed_role = 'True'
 
-        boto.config.save_user_option(
-            short_term,
-            'aws_access_key_id',
-            tempCredentials.access_key)
-        boto.config.save_user_option(
-            short_term,
-            'aws_secret_access_key',
-            tempCredentials.secret_key)
-        boto.config.save_user_option(
-            short_term,
-            'aws_security_token',
-            tempCredentials.session_token)
-        boto.config.save_user_option(
-            short_term,
-            'expiration',
-            tempCredentials.expiration)
-        if assume_role_arn:
+        default_options = [
+            ('aws_access_key_id', tempCredentials.access_key),
+            ('aws_secret_access_key', tempCredentials.secret_key),
+            ('aws_security_token', tempCredentials.session_token),
+            ('expiration', tempCredentials.expiration),
+            ('assumed_role', assumed_role)
+        ]
+
+        for option, value in default_options:
             boto.config.save_user_option(
                 short_term,
-                'assumed_arn',
-                assume_role_arn)
+                option,
+                value
+            )
 
     except boto.exception.BotoServerError as e:
         message = '%s - Please try again.' % (e.message)
