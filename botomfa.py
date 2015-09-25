@@ -83,6 +83,10 @@ def get_sts(duration, mfa_serial, mfa_device_name,
 def test_creds(profile_name):
     try:
         logger.info('Validating temporary credentials..')
+        if boto.config.getbool(profile_name, 'assumed_role'):
+            logger.info('You are currently using the credentials of an '
+                        'AssumedRole. Use the --clear flag to clear these '
+                        'credentials')
         expiration_string = boto.config.get(profile_name, 'expiration')
         if expiration_string is None:
             logger.error('Expiration timestamp missing from temporary '
