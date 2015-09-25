@@ -48,6 +48,7 @@ def get_sts(duration, mfa_serial, mfa_device_name,
                 duration=duration,
                 mfa_serial_number=mfa_serial,
                 mfa_token=mfa_TOTP)
+            boto.config.setbool(short_term, 'assumed_role', False)
         else:
             role_session_name = assume_role_arn.split('/')[-1]
             assumedRole = sts_connection.assume_role(
@@ -56,6 +57,7 @@ def get_sts(duration, mfa_serial, mfa_device_name,
                 mfa_serial_number=mfa_serial,
                 mfa_token=mfa_TOTP)
             tempCredentials = assumedRole.credentials
+            boto.config.setbool(short_term, 'assumed_role', True)
 
         boto.config.save_user_option(
             short_term,
