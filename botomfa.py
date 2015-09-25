@@ -111,7 +111,7 @@ def test_creds(profile_name):
         )
         return True
     except:
-        logger.error('Temporary credentials failed.')
+        logger.warn('Temporary credentials are invalid.')
         return False
 
 
