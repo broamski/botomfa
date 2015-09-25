@@ -18,7 +18,8 @@ logger.addHandler(stdout_handler)
 logger.setLevel(logging.DEBUG)
 
 
-def get_sts(duration, mfa_serial, mfa_device_name, long_term, short_term):
+def get_sts(duration, mfa_serial, mfa_device_name,
+            long_term, short_term, assume_role_arn=None):
     if boto.config.get(long_term, 'aws_access_key_id') is None:
         logger.error('aws_access_key_id is missing from section %s'
                      'or config file is missing.' % (long_term,))
@@ -42,10 +43,20 @@ def get_sts(duration, mfa_serial, mfa_device_name, long_term, short_term):
     try:
         sts_connection = STSConnection(aws_access_key_id=long_term_id,
                                        aws_secret_access_key=long_term_secret)
-        tempCredentials = sts_connection.get_session_token(
-            duration=duration,
-            mfa_serial_number=mfa_serial,
-            mfa_token=mfa_TOTP)
+        if assume_role_arn is None:
+            tempCredentials = sts_connection.get_session_token(
+                duration=duration,
+                mfa_serial_number=mfa_serial,
+                mfa_token=mfa_TOTP)
+        else:
+            role_session_name = assume_role_arn.split('/')[-1]
+            assumedRole = sts_connection.assume_role(
+                assume_role_arn, role_session_name,
+                duration_seconds=duration,
+                mfa_serial_number=mfa_serial,
+                mfa_token=mfa_TOTP)
+            tempCredentials = assumedRole.credentials
+
         boto.config.save_user_option(
             short_term,
             'aws_access_key_id',
@@ -62,6 +73,12 @@ def get_sts(duration, mfa_serial, mfa_device_name, long_term, short_term):
             short_term,
             'expiration',
             tempCredentials.expiration)
+        if assume_role_arn:
+            boto.config.save_user_option(
+                short_term,
+                'assumed_arn',
+                assume_role_arn)
+
     except boto.exception.BotoServerError as e:
         message = '%s - Please try again.' % (e.message)
         logger.error(message)
@@ -103,7 +120,8 @@ def test_creds(profile_name):
         return False
 
 
-def run(duration, aws_account_num, mfa_device_name, profile):
+def run(duration, aws_account_num, mfa_device_name, profile,
+        assume_role_arn=None):
     # If no profile specified, use default
     if profile is None:
         logger.debug('Using default profile.')
@@ -134,6 +152,8 @@ def run(duration, aws_account_num, mfa_device_name, profile):
 
     logger.debug('Your AWS account number is: %s' % aws_account_num)
     logger.debug('Your MFA device name is: %s' % mfa_device_name)
+    if assume_role_arn:
+        logger.debug('You are assuming the role: %s' % assume_role_arn)
 
     # if any of the section named fields are missing, prompt for token
     if (
@@ -144,9 +164,11 @@ def run(duration, aws_account_num, mfa_device_name, profile):
         logger.info(
             'Temporary credentials are missing, obtaining them.')
         get_sts(duration, mfa_serial,
-                mfa_device_name, long_term_profile, short_term_profile)
+                mfa_device_name, long_term_profile,
+                short_term_profile, assume_role_arn)
 
     if not test_creds(short_term_profile):
         get_sts(duration, mfa_serial,
-                mfa_device_name, long_term_profile, short_term_profile)
+                mfa_device_name, long_term_profile,
+                short_term_profile, assume_role_arn)
         test_creds(short_term_profile)

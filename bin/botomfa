@@ -17,6 +17,8 @@ parser.add_argument('--mfa-device-name',
                     help='Typically the AWS username')
 parser.add_argument('--profile',
                     help='Use botomfa with a profile', default=None)
+parser.add_argument('--assume-role-arn',
+                    help='The ARN of the role you are assuming')
 args = parser.parse_args()
 
 if args.duration:
@@ -37,4 +39,10 @@ if args.mfa_device_name:
 else:
     mfa_device_name = os.environ.get('MFA_DEVICE_NAME')
 
-botomfa.run(duration, aws_account_num, mfa_device_name, args.profile)
+botomfa.run(
+    duration,
+    aws_account_num,
+    mfa_device_name,
+    args.profile,
+    assume_role_arn=args.assume_role_arn
+)
