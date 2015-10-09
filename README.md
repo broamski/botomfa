@@ -38,7 +38,7 @@ aws_secret_access_key = YOUR_LONGTERM_ACCESS_KEY
 
 The section ``[long-term]`` houses your long-term IAM User Access Keys
 that do not change. These are referecned when creating temporary credentials.
-This script manages, validates, and updates temporary credentials which are stored in the ``[Credentials]`` section. This section may look familar to you as the **defaut/fallback** section that boto references when authenticating to AWS services. This is intentional so that you are not requred to update any of your existing boto scripts!
+This script manages, validates, and updates temporary credentials which are stored in the ``[Credentials]`` section. This section may look familar to you as the **defaut/fallback** section that boto references when authenticating to AWS services. This is intentional so that you are not required to update any of your existing boto scripts!
 
 After running `botomfa`, you will notice that the `[Credentials]` section has been populated:
 
