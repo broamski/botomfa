@@ -1,5 +1,6 @@
+# This project is no longer in active development. Please see [aws-mfa](https://github.com/broamski/aws-mfa).
 
-# botomfa: boto + multi-factor authentication (MFA) enabled accounts
+#### botomfa: boto + multi-factor authentication (MFA) enabled accounts
 
 
 **botomfa** makes it easy to use boto, the AWS SDK for Python, with AWS IAM user accounts that have multi-factor authentication (MFA) enabled.
